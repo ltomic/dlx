@@ -1,58 +1,91 @@
+#include "ColumnHeader.hpp"
 #include "Node.hpp"
 
-ColumnHeader* Node::getColHeader() const {
-  return colHeader;
+Node::Node(): Node(nullptr) {};
+Node::Node(ColumnHeader* column): left(this), right(this), up(this), down(this), 
+  column_header(column) {}
+
+ColumnHeader* Node::get_column_header() const {
+  return column_header;
 }
 
-Node* Node::left() const {
-  return l;
+Node* Node::get_left() const {
+  return left;
 }
 
-Node* Node::right() const {
-  return r;
+Node* Node::get_right() const {
+  return right;
 }
 
-Node* Node::up() const {
-  return u;
+Node* Node::get_up() const {
+  return up;
 }
 
-Node* Node::down() const {
-  return d;
+Node* Node::get_down() const {
+  return down;
 }
 
-void Node::setLeft(Node* x) {
-  l = x;
+void Node::set_left(Node* x) {
+  left = x;
 }
 
-void Node::setRight(Node* x) {
-  r = x;
+void Node::set_right(Node* x) {
+  right = x;
 }
 
-void Node::setUp(Node* x) {
-  u = x;
+void Node::set_up(Node* x) {
+  up = x;
 }
 
-void Node::setDown(Node* x) {
-  d = x;
+void Node::set_down(Node* x) {
+  down = x;
 }
 
-void Node::self_insert_horz() {
-  this->right()->setLeft(this);
-  this->left()->setRight(this);
+// tijekom horizontalnog reinserta ne mijenjas svoj column
+void Node::reinsert_horizontal() {
+  right->set_left(this);
+  left->set_right(this);
 }
 
-void Node::self_insert_vert() {
-  this->up()->setDown(this);
-  this->down()->setUp(this);
+void Node::reinsert_vertical() {
+  up->set_down(this);
+  down->set_up(this);
+  if (column_header != NULL)
+    column_header->increase_size();
 }
 
-void Node::self_remove_horz() {
-  this->right()->setLeft(this->left());
-  this->left()->setRight(this->right());
+void Node::remove_horizontal() {
+  right->set_left(this->get_left());
+  left->set_right(this->get_right());
 }
 
-void Node::self_remove_vert() {
-  this->up()->setDown(this->down());
-  this->down()->setUp(this->up());
+void Node::remove_vertical() {
+  up->set_down(this->get_down());
+  down->set_up(this->get_up());
+  if (column_header != NULL)
+    column_header->decrease_size();
 }
 
+void Node::push_right(Node* x) {
+  right->set_left(x);
+  x->set_right(this->get_right());
+  x->set_left(this);
+  this->set_right(x);
+}
+
+void Node::push_left(Node *x) {
+  left->push_right(x);
+}
+
+void Node::push_down(Node *x) {
+  down->set_up(x);
+  x->set_down(this->get_down());
+  x->set_up(this);
+  this->set_down(x);
+  if (column_header != NULL)
+    column_header->increase_size();
+}
+
+void Node::push_up(Node *x) {
+  up->push_down(x);
+}

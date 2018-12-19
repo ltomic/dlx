@@ -11,6 +11,8 @@
 # BUILD=./build/
 #
 
+MKDIR = mkdir -p
+
 CXX = g++-8
 
 GTESTDIR = /opt/googletest/googletest
@@ -34,37 +36,42 @@ echo :
 CXXFLAGS = -std=c++17 -Wall -Wextra -pthread -g
 CPPFLAGS = -isystem $(GTESTDIR)/include $(INCLUDE)
 
-lib/libalgo.a : $(OBJECTS)
-	$(AR) $(ARFLAGS) $@ $?
+#lib/libalgo.a : $(OBJECTS)
+#	$(AR) $(ARFLAGS) $@ $?
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
+	$(MKDIR) $(shell dirname $@) # TODO: ili ih samo napraviti na pocetku
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 -include $(DEPENDENCIES)
 
 $(DEPENDENCIES) : $(DEPDIR)/%.d : $(SRCDIR)/%.cpp
+	$(MKDIR) $(shell dirname $@) # TODO: ili ih samo napraviti na pocetku
 	@$(CPP) $(CPPFLAGS) $(CXXFLAGS) $< -MM -MT $(@:$(DEPDIR)/%.d=$(OBJDIR)/%.o) -o $@
 
-$(BINARIES): $(BINDIR)/% : $(SRCDIR)/%.cpp lib/libalgo.a
+$(BINARIES): $(BINDIR)/% : $(SRCDIR)/%.cpp $(OBJECTS)
+	$(MKDIR) $(shell dirname $@) # TODO: ili ih samo napraviti na pocetku
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
 
-SOURCES_TEST = $(wildcard src/test/classic/*.cpp) \
-			   $(wildcard src/test/matrix/*.cpp)
+SOURCES_TEST = $(wildcard src/test/*.cpp)
 
 OBJECTS_TEST = $(SOURCES_TEST:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 BINARIES_TEST = $(SOURCES_TEST:$(SRCDIR)/%.cpp=$(BINDIR)/%)
 DEPENDENCIES_TEST = $(OBJECTS_TEST:$(OBJDIR)/%.o=$(DEPDIR)/%.d)
 
 $(OBJECTS_TEST): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
+	$(MKDIR) $(shell dirname $@) # TODO: ili ih samo napraviti na pocetku
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 -include $(DEPENDENCIES_TEST)
 
 $(DEPENDENCIES_TEST) : $(DEPDIR)/%.d : $(SRCDIR)/%.cpp
+	$(MKDIR) $(shell dirname $@) # TODO: ili ih samo napraviti na pocetku
 	@$(CPP) $(CPPFLAGS) $(CXXFLAGS) $< -MM -MT $(@:$(DEPDIR)/%.d=$(OBJDIR)/%.o) -o $@
 
 $(BINARIES_TEST): $(BINDIR)/% : $(OBJDIR)/%.o  \
-	$(GTESTDIR)/make/gtest_main.a lib/libalgo.a
+	$(GTESTDIR)/make/gtest_main.a $(OBJECTS)	
+	$(MKDIR) $(shell dirname $@) # TODO: ili ih samo napraviti na pocetku
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
 
 # 

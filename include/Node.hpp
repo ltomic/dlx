@@ -6,26 +6,34 @@ class ColumnHeader;
 
 class Node {
   public:
-    ColumnHeader* getColHeader() const;
+    Node();
+    Node(ColumnHeader* column);
+    
+    ColumnHeader* get_column_header() const;
 
-    Node* left() const;
-    Node* right() const;
-    Node* up() const;
-    Node* down() const;
+    Node* get_left() const;
+    Node* get_right() const;
+    Node* get_up() const;
+    Node* get_down() const;
 
-    void setLeft(Node* x);
-    void setRight(Node* x);
-    void setUp(Node* x);
-    void setDown(Node* x);
+    void set_left(Node* x);
+    void set_right(Node* x);
+    void set_up(Node* x);
+    void set_down(Node* x);
 
-    void self_insert_horz();
-    void self_insert_vert();
-    void self_remove_horz();
-    void self_remove_vert();
+    void reinsert_horizontal();
+    void reinsert_vertical();
+    void remove_horizontal();
+    void remove_vertical();
+
+    void push_right(Node* x);
+    void push_left(Node* x);
+    virtual void push_down(Node* x);
+    virtual void push_up(Node* x);
   
   private:
-    Node *l, *r, *u, *d;
-    ColumnHeader *colHeader;
+    Node *left, *right, *up, *down;
+    ColumnHeader *column_header;
 };
 
 #endif

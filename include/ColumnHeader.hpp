@@ -7,18 +7,22 @@
 
 class ColumnHeader: public Node {
   public:
+    ColumnHeader();
+    ColumnHeader(const int& name);
+    ColumnHeader(ColumnHeader *header, const int& name);
+
     void cover();
     void uncover();
 
-    int getName();
-    size_t getSize();
+    int get_name();
+    size_t get_size();
+    
+    void decrease_size();
+    void increase_size();
 
   private:
     int name;
     size_t sz;
-    
-    void decrease_size();
-    void increase_size();
 };
 
 #endif
