@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include "dlx.hpp"
-#include "ExactCover.hpp"
 
 #include <vector>
 #include <string>
@@ -16,7 +15,7 @@ namespace {
       "0100001"
     };
 
-    auto brute_sol = dlx::brute(input);
+    auto brute_sol = brute(input);
     std::vector<std::vector<int>> correct = {{1, 3, 5}};
     EXPECT_EQ(brute_sol, correct);
   }
@@ -33,14 +32,14 @@ namespace {
     };
 
     std::vector<std::vector<int>> correct_solution = {{0, 3, 6}};
-    EXPECT_EQ(correct_solution, dlx::brute(input));
+    EXPECT_EQ(correct_solution, brute(input));
   }
 
   TEST(TestBrute, NoSolution_1) {
     std::vector<std::string> input = { "0" };
     
     std::vector<std::vector<int>> correct_solution;
-    EXPECT_EQ(correct_solution, dlx::brute(input));
+    EXPECT_EQ(correct_solution, brute(input));
   }
 
   TEST(TestBrute, EveryRowSolution) {
@@ -54,7 +53,7 @@ namespace {
 
     std::vector<std::vector<int>> correct_solution = {{0}, {1}, {2}, {3}};
 
-    EXPECT_EQ(correct_solution, dlx::brute(input));
+    EXPECT_EQ(correct_solution, brute(input));
   }
 
   TEST(TestBrute, EveryRowInSingleSolution) {
@@ -67,7 +66,7 @@ namespace {
     };
 
     std::vector<std::vector<int>> correct_solution = {{0, 1, 2, 3, 4}};
-    EXPECT_EQ(correct_solution, dlx::brute(input));
+    EXPECT_EQ(correct_solution, brute(input));
   }
   
   TEST(SmallTest, SingleSolution) {
@@ -80,8 +79,7 @@ namespace {
       "0100001"
     };
 
-    ExactCover cover(input);
-    std::vector<std::vector<int>> sols = cover.solve();
+    std::vector<std::vector<int>> sols = solve(input);
     std::vector<std::vector<int>> correct = {{1, 3, 5}};
     EXPECT_EQ(sols, correct);
   }  
@@ -97,17 +95,15 @@ namespace {
       "000100101"
     };
 
-    ExactCover cover(input);
     std::vector<std::vector<int>> correct_solution = {{0, 3, 6}};
-    EXPECT_EQ(correct_solution, cover.solve());
+    EXPECT_EQ(correct_solution, solve(input));
   }
 
   TEST(SmallTest, NoSolution_1) {
     std::vector<std::string> input = { "0" };
     
-    ExactCover cover(input);
     std::vector<std::vector<int>> correct_solution;
-    EXPECT_EQ(correct_solution, cover.solve());
+    EXPECT_EQ(correct_solution, solve(input));
   }
 
   TEST(SmallTest, EveryRowSolution) {
@@ -118,9 +114,8 @@ namespace {
       "11111"
     };
 
-    ExactCover cover(input);
     std::vector<std::vector<int>> correct_solution = {{0}, {1}, {2}, {3}};
-    EXPECT_EQ(correct_solution, cover.solve());
+    EXPECT_EQ(correct_solution, solve(input));
   }
 
   TEST(SmallTest, EveryRowInSingleSolution) {
@@ -132,9 +127,8 @@ namespace {
       "00010"
     };
 
-    ExactCover cover(input);
     std::vector<std::vector<int>> correct_solution = {{0, 1, 2, 3, 4}};
-    EXPECT_EQ(correct_solution, cover.solve());
+    EXPECT_EQ(correct_solution, solve(input));
   }
 
 }

@@ -6,122 +6,226 @@
 
 #include "util.hpp"
 #include "dlx.hpp"
-#include "ExactCover.hpp"
 
-namespace dlx {
-  ColumnHeader* find_smallest_column(Node *master) {
-    ColumnHeader *smallest = NULL;
+std::vector<int> matrix_to_row_masks(const std::vector<std::string>& matrix) {
+  std::vector<int> row_masks;
 
-    for (ColumnHeader *i = (ColumnHeader*)master->get_right(); i != master; 
-        i = (ColumnHeader*)i->get_right()) {
-      if (smallest == NULL || smallest->get_size() > i->get_size())
-        smallest = i;
+  for (std::string row: matrix) {
+    int mask = 0;
+    int len = row.size();
+    for (int j = 0; j < len; ++j) {
+      if (row[j] == '1') mask |= 1 << j;
     }
-    return smallest;
+    row_masks.push_back(mask);
   }
+  return row_masks;
+}
 
-  std::vector<Node*> sol;
-  void print_solution() {
-    for (Node* i: sol) {
+const int BRUTE_ROW_COLUMN_LIMIT = 32;
+std::vector<std::vector<int>> brute(const std::vector<std::string>& matrix) {
+  int num_rows = matrix.size();
+  int num_columns = matrix[0].size();
+  assert(num_rows < BRUTE_ROW_COLUMN_LIMIT);
+  assert(num_columns < BRUTE_ROW_COLUMN_LIMIT);
 
-      std::cout << i->get_column_header()->get_name() << " ";
-    }
-    std::cout << std::endl;
-  }
+  int possibilites = (1 << num_rows);
+  int all = (1 << num_columns) - 1;
+  std::vector<int> row_masks = matrix_to_row_masks(matrix);
 
-  void print_state(ColumnHeader* master) {
-    for (ColumnHeader* i = (ColumnHeader*)master->get_down(); i != master; 
-        i = (ColumnHeader*)i->get_down()) {
-      printf("ROW %d:", i->get_name());
-      for (Node* j = i->get_right(); j != i; j = j->get_right()) {
-        printf("%d ", j->get_column_header()->get_name());
-      }
-      printf("\n");
-    }
-  }
-
-  void search(ColumnHeader *master, std::function<void(const std::vector<int>&)> notify) {
-    if (master->get_right() == master) {
-      std::vector<int> names;
-      for (auto i: sol) {
-        while (i->get_column_header() != master) i = i->get_right();
-        names.push_back(((ColumnHeader*)i)->get_name());
-      }
-      std::sort(names.begin(), names.end());
-      notify(names);
-      return;
-    }
+  std::vector<std::vector<int>> sols;
+  for (int i = 0; i < possibilites; ++i) {
+    int covered_columns = 0;
+    bool flag = true;
     
-    ColumnHeader *column_to_cover = find_smallest_column(master); 
+    for (int j = 0; j < num_rows && flag; ++j) {
+      if (((i >> j) & 1) == 0) continue;
+      if (covered_columns & row_masks[j]) flag = false;
+      covered_columns |= row_masks[j];
+    }
+    if (!flag || all != covered_columns) continue;
     
-    column_to_cover->cover();
-    //select a row from the latest covered column
-    for (Node *row = column_to_cover->get_down(); row != column_to_cover; 
-        row = row->get_down()) {
-      sol.push_back(row);
-
-      // remove all columns with 1s in the selected row
-      for (Node *cell = row->get_right(); cell != row; cell = cell->get_right()) {
-        if (cell->get_column_header() == master) continue;
-        cell->get_column_header()->cover();
-      }
-      search(master, notify);
-      
-      sol.pop_back();
-
-      // unselect current row - insert all column with 1s in the selected row
-      for (Node *col = row->get_left(); col != row; col = col->get_left()) {
-        col->get_column_header()->uncover();
-      }
+    std::vector<int> found_solution;
+    for (int j = 0; j < num_rows; ++j) {
+      if (((i >> j) & 1) == 0) continue;
+      found_solution.push_back(j);
     }
-  
-    column_to_cover->uncover();
+    sols.push_back(found_solution);
+  }
+  return sols;
+}
+
+struct Node {
+  Node(): Node(-1, -1) {}
+  Node(int type, int id): Node(type, id, this) {}
+  Node(int type, int id, Node *head): type(type), id(id), head(head),
+    left(this), right(this), down(this), up(this) {}
+
+  void insert_down(Node* x) {
+    down->up = x;
+    x->down = down;
+    x->up = this;
+    down = x;
   }
 
-  std::vector<int> matrix_to_row_masks(const std::vector<std::string>& matrix) {
-    std::vector<int> row_masks;
-
-    for (std::string row: matrix) {
-      int mask = 0;
-      int len = row.size();
-      for (int j = 0; j < len; ++j) {
-        if (row[j] == '1') mask |= 1 << j;
-      }
-      row_masks.push_back(mask);
-    }
-    return row_masks;
+  void insert_up(Node* x) {
+    up->insert_down(x);
   }
 
-  const int BRUTE_ROW_COLUMN_LIMIT = 32;
-  std::vector<std::vector<int>> brute(const std::vector<std::string>& matrix) {
-    int num_rows = matrix.size();
-    int num_columns = matrix[0].size();
-    assert(num_rows < BRUTE_ROW_COLUMN_LIMIT);
-    assert(num_columns < BRUTE_ROW_COLUMN_LIMIT);
-
-    int possibilites = (1 << num_rows);
-    int all = (1 << num_columns) - 1;
-    std::vector<int> row_masks = matrix_to_row_masks(matrix);
-
-    std::vector<std::vector<int>> sols;
-    for (int i = 0; i < possibilites; ++i) {
-      int covered_columns = 0;
-      bool flag = true;
-      
-      for (int j = 0; j < num_rows && flag; ++j) {
-        if (((i >> j) & 1) == 0) continue;
-        if (covered_columns & row_masks[j]) flag = false;
-        covered_columns |= row_masks[j];
-      }
-      if (!flag || all != covered_columns) continue;
-      
-      std::vector<int> found_solution;
-      for (int j = 0; j < num_rows; ++j) {
-        if (((i >> j) & 1) == 0) continue;
-        found_solution.push_back(j);
-      }
-      sols.push_back(found_solution);
-    }
-    return sols;
+  void insert_right(Node* x) {
+    right->left = x;
+    x->right = right;
+    x->left = this;
+    right = x;
   }
+
+  void insert_left(Node* x) {
+    left->insert_right(x);
+  }
+
+  size_t size;
+  // 0 - master node
+  // 1 - column node
+  // 2 - row node
+  // 3 - cell node
+  // Could recognize cell by what does it point to?
+  int type;
+  int id;
+  Node *head;
+  Node *left, *right, *down, *up;
 };
+
+Node* find_smallest_column(Node *master) {
+  Node* smallest = NULL;
+
+  for (Node *i = master->right; i != master; i = i->right) {
+    if (smallest == NULL || smallest->size > i->size)
+      smallest = i;
+  }
+  return smallest;
+}
+
+std::vector<Node*> sol;
+void print_solution() {
+  for (Node* i: sol) {
+
+    std::cout << i->head->id << " ";
+  }
+  std::cout << std::endl;
+}
+
+void cover(Node* col) {
+  col->right->left = col->left;
+  col->left->right = col->right;
+
+  for (Node* row = col->down; row != col; row = row->down) {
+    for (Node* cell = row->right; cell != row; cell = cell->right) {
+      cell->up->down = cell->down;
+      cell->down->up = cell->up;
+      cell->head->size--;
+    }
+  }
+}
+
+void uncover(Node* col) {
+  for (Node* row = col->up; row != col; row = row->up) {
+    for (Node* cell = row->left; cell != row; cell = cell->left) {
+      cell->up->down = cell;
+      cell->down->up = cell;
+      cell->head->size++;
+    }
+  }
+  col->right->left = col;
+  col->left->right = col;
+}
+
+void print_state(Node* master) {
+  for (Node* i = master->down; i != master; i = i->down) {
+    printf("ROW %d:", i->id);
+    for (Node* j = i->right; j != i; j = j->right) {
+      printf("%d ", j->head->id);
+    }
+    printf("\n");
+  }
+}
+
+void search(Node *master, std::function<void(const std::vector<int>&)> notify) {
+  if (master->right == master) {
+    std::vector<int> names;
+    for (auto i: sol) {
+      while (i->head != master) i = i->right;
+      names.push_back(i->id);
+    }
+    std::sort(names.begin(), names.end());
+    notify(names);
+    return;
+  }
+  
+  Node* column_to_cover = find_smallest_column(master); 
+
+  cover(column_to_cover);
+  //column_to_cover->cover();
+  //select a row from the latest covered column
+  for (Node *row = column_to_cover->down; row != column_to_cover; row = row->down) {
+    sol.push_back(row);
+
+    // remove all columns with 1s in the selected row
+    for (Node *cell = row->right; cell != row; cell = cell->right) {
+      if (cell->head == master) continue;
+      cover(cell->head);
+    }
+    search(master, notify);
+    
+    sol.pop_back();
+
+    // unselect current row - insert all column with 1s in the selected row
+    for (Node *cell = row->left; cell != row; cell = cell->left) {
+      if (cell->head == master) continue;
+      uncover(cell->head);
+    }
+  }
+
+  uncover(column_to_cover);
+//  column_to_cover->uncover();
+}
+
+std::vector<std::vector<int>> solve(const std::vector<std::string>& matrix) {
+  Node* master = new Node(0, -1);
+
+  Node* curr_column = master;
+  // TODO: matrix empty
+  // TODO: strings have to be equal lenghts
+  size_t num_rows = matrix.size();
+  for (size_t i = 0; i < num_rows; ++i) {
+    master->insert_up(new Node(2, i, master));
+  }
+  
+  size_t num_columns = matrix[0].size();
+  for (size_t i = 0; i < num_columns; ++i) {
+    curr_column->insert_right(new Node(1, i));
+    curr_column = curr_column->right;
+  }
+
+  Node* row_header = master;
+  for (std::string i: matrix) {
+    curr_column = master;
+    Node* last_in_row = row_header = row_header->down;
+    
+    for (char c: i) {
+      curr_column = curr_column->right;
+      if (c == '0') continue;
+      
+      Node* new_cell = new Node(3, 1, curr_column);
+      last_in_row->insert_right(new_cell);
+      last_in_row = new_cell;
+      curr_column->insert_up(new_cell);
+      curr_column->size++;
+    }
+  }
+
+  std::vector<std::vector<int>> sols;
+  search(master, [&sols](const std::vector<int>& sol) mutable {
+      sols.push_back(sol);
+      });
+
+  return sols;
+}
