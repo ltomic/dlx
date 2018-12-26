@@ -1,3 +1,7 @@
+#pragma once
+#ifndef DLX_HPP
+#define DLX_HPP
+
 #include <functional>
 
 struct Node;
@@ -18,3 +22,4 @@ void search(Node *master, std::function<void(const std::vector<int>&)> notify);
 std::vector<std::vector<int>> brute(const std::vector<std::string>& matrix);
 
 std::vector<std::vector<int>> solve(const std::vector<std::string>& matrix);
+#endif

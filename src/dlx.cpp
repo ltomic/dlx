@@ -7,91 +7,45 @@
 #include "util.hpp"
 #include "dlx.hpp"
 
-std::vector<int> matrix_to_row_masks(const std::vector<std::string>& matrix) {
-  std::vector<int> row_masks;
+class Node {
+  public:
+    Node(): Node(-1, -1) {}
+    Node(int type, int id): Node(type, id, this) {}
+    Node(int type, int id, Node *head): type(type), id(id), head(head),
+      left(this), right(this), down(this), up(this) {}
 
-  for (std::string row: matrix) {
-    int mask = 0;
-    int len = row.size();
-    for (int j = 0; j < len; ++j) {
-      if (row[j] == '1') mask |= 1 << j;
+    void insert_down(Node* x) {
+      down->up = x;
+      x->down = down;
+      x->up = this;
+      down = x;
     }
-    row_masks.push_back(mask);
-  }
-  return row_masks;
-}
 
-const int BRUTE_ROW_COLUMN_LIMIT = 32;
-std::vector<std::vector<int>> brute(const std::vector<std::string>& matrix) {
-  int num_rows = matrix.size();
-  int num_columns = matrix[0].size();
-  assert(num_rows < BRUTE_ROW_COLUMN_LIMIT);
-  assert(num_columns < BRUTE_ROW_COLUMN_LIMIT);
-
-  int possibilites = (1 << num_rows);
-  int all = (1 << num_columns) - 1;
-  std::vector<int> row_masks = matrix_to_row_masks(matrix);
-
-  std::vector<std::vector<int>> sols;
-  for (int i = 0; i < possibilites; ++i) {
-    int covered_columns = 0;
-    bool flag = true;
-    
-    for (int j = 0; j < num_rows && flag; ++j) {
-      if (((i >> j) & 1) == 0) continue;
-      if (covered_columns & row_masks[j]) flag = false;
-      covered_columns |= row_masks[j];
+    void insert_up(Node* x) {
+      up->insert_down(x);
     }
-    if (!flag || all != covered_columns) continue;
-    
-    std::vector<int> found_solution;
-    for (int j = 0; j < num_rows; ++j) {
-      if (((i >> j) & 1) == 0) continue;
-      found_solution.push_back(j);
+
+    void insert_right(Node* x) {
+      right->left = x;
+      x->right = right;
+      x->left = this;
+      right = x;
     }
-    sols.push_back(found_solution);
-  }
-  return sols;
-}
 
-struct Node {
-  Node(): Node(-1, -1) {}
-  Node(int type, int id): Node(type, id, this) {}
-  Node(int type, int id, Node *head): type(type), id(id), head(head),
-    left(this), right(this), down(this), up(this) {}
+    void insert_left(Node* x) {
+      left->insert_right(x);
+    }
 
-  void insert_down(Node* x) {
-    down->up = x;
-    x->down = down;
-    x->up = this;
-    down = x;
-  }
-
-  void insert_up(Node* x) {
-    up->insert_down(x);
-  }
-
-  void insert_right(Node* x) {
-    right->left = x;
-    x->right = right;
-    x->left = this;
-    right = x;
-  }
-
-  void insert_left(Node* x) {
-    left->insert_right(x);
-  }
-
-  size_t size;
-  // 0 - master node
-  // 1 - column node
-  // 2 - row node
-  // 3 - cell node
-  // Could recognize cell by what does it point to?
-  int type;
-  int id;
-  Node *head;
-  Node *left, *right, *down, *up;
+    size_t size;
+    // 0 - master node
+    // 1 - column node
+    // 2 - row node
+    // 3 - cell node
+    // Could recognize cell by what does it point to?
+    int type;
+    int id;
+    Node *head;
+    Node *left, *right, *down, *up;
 };
 
 Node* find_smallest_column(Node *master) {
@@ -107,7 +61,6 @@ Node* find_smallest_column(Node *master) {
 std::vector<Node*> sol;
 void print_solution() {
   for (Node* i: sol) {
-
     std::cout << i->head->id << " ";
   }
   std::cout << std::endl;

@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 
-namespace { 
-  TEST(SmallTest, SingleSolution) {
+namespace {
+  TEST(TestBrute, SingleSolution_1) {
     std::vector<std::string> input = {
       "1001001",
       "1001000",
@@ -15,12 +15,12 @@ namespace {
       "0100001"
     };
 
-    std::vector<std::vector<int>> sols = solve(input);
+    auto brute_sol = brute(input);
     std::vector<std::vector<int>> correct = {{1, 3, 5}};
-    EXPECT_EQ(sols, correct);
-  }  
+    EXPECT_EQ(brute_sol, correct);
+  }
 
-  TEST(SmallTest, SingleSolution_2) {
+  TEST(TestBrute, SingleSolution_2) {
     std::vector<std::string> input = {
       "101010000",
       "100001100",
@@ -32,17 +32,17 @@ namespace {
     };
 
     std::vector<std::vector<int>> correct_solution = {{0, 3, 6}};
-    EXPECT_EQ(correct_solution, solve(input));
+    EXPECT_EQ(correct_solution, brute(input));
   }
 
-  TEST(SmallTest, NoSolution_1) {
+  TEST(TestBrute, NoSolution_1) {
     std::vector<std::string> input = { "0" };
     
     std::vector<std::vector<int>> correct_solution;
-    EXPECT_EQ(correct_solution, solve(input));
+    EXPECT_EQ(correct_solution, brute(input));
   }
 
-  TEST(SmallTest, EveryRowSolution) {
+  TEST(TestBrute, EveryRowSolution) {
     std::vector<std::string> input = {
       "11111",
       "11111",
@@ -50,11 +50,13 @@ namespace {
       "11111"
     };
 
+
     std::vector<std::vector<int>> correct_solution = {{0}, {1}, {2}, {3}};
-    EXPECT_EQ(correct_solution, solve(input));
+
+    EXPECT_EQ(correct_solution, brute(input));
   }
 
-  TEST(SmallTest, EveryRowInSingleSolution) {
+  TEST(TestBrute, EveryRowInSingleSolution) {
     std::vector<std::string> input = {
       "10000",
       "00100",
@@ -64,7 +66,6 @@ namespace {
     };
 
     std::vector<std::vector<int>> correct_solution = {{0, 1, 2, 3, 4}};
-    EXPECT_EQ(correct_solution, solve(input));
+    EXPECT_EQ(correct_solution, brute(input));
   }
-
-}
+} 
