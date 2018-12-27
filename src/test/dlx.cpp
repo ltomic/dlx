@@ -4,9 +4,11 @@
 #include <vector>
 #include <string>
 
+using std::vector;
+
 namespace { 
   TEST(SmallTest, SingleSolution) {
-    std::vector<std::string> input = {
+    vector<std::string> input = {
       "1001001",
       "1001000",
       "0001101",
@@ -15,13 +17,17 @@ namespace {
       "0100001"
     };
 
-    std::vector<std::vector<int>> sols = solve(input);
-    std::vector<std::vector<int>> correct = {{1, 3, 5}};
+    vector<vector<vector<std::string>>> sols = solve(input);
+    vector<vector<vector<std::string>>> correct = {
+      {
+        {"0", "3"}, {"1", "6"}, {"2", "4", "5"}
+      }
+    };
     EXPECT_EQ(sols, correct);
   }  
 
   TEST(SmallTest, SingleSolution_2) {
-    std::vector<std::string> input = {
+    vector<std::string> input = {
       "101010000",
       "100001100",
       "010100000",
@@ -31,26 +37,37 @@ namespace {
       "000100101"
     };
 
-    std::vector<std::vector<int>> correct_solution = {{0, 3, 6}};
+//    vector<vector<int>> correct_solution = {{0, 3, 6}};
+    vector<vector<vector<std::string>>> correct_solution = {
+      {
+        {"0", "2", "4"}, {"1", "5", "7"}, {"3", "6", "8"}
+      }
+    };
     EXPECT_EQ(correct_solution, solve(input));
   }
 
   TEST(SmallTest, NoSolution_1) {
-    std::vector<std::string> input = { "0" };
+    vector<std::string> input = { "0" };
     
-    std::vector<std::vector<int>> correct_solution;
+    vector<vector<vector<std::string>>> correct_solution;
     EXPECT_EQ(correct_solution, solve(input));
   }
 
   TEST(SmallTest, EveryRowSolution) {
-    std::vector<std::string> input = {
+    vector<std::string> input = {
       "11111",
       "11111",
       "11111",
       "11111"
     };
 
-    std::vector<std::vector<int>> correct_solution = {{0}, {1}, {2}, {3}};
+    //vector<vector<int>> correct_solution = {{0}, {1}, {2}, {3}};
+    vector<vector<vector<std::string>>> correct_solution = {
+      { {"0", "1", "2", "3", "4"} },
+      { {"0", "1", "2", "3", "4"} },
+      { {"0", "1", "2", "3", "4"} },
+      { {"0", "1", "2", "3", "4"} }
+    };
     EXPECT_EQ(correct_solution, solve(input));
   }
 
@@ -63,7 +80,12 @@ namespace {
       "00010"
     };
 
-    std::vector<std::vector<int>> correct_solution = {{0, 1, 2, 3, 4}};
+    //vector<vector<int>> correct_solution = {{0, 1, 2, 3, 4}};
+    vector<vector<vector<std::string>>> correct_solution = {
+      {
+        {"0"}, {"1"}, {"2"}, {"3"}, {"4"}
+      }
+    };
     EXPECT_EQ(correct_solution, solve(input));
   }
 

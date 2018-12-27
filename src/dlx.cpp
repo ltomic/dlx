@@ -3,15 +3,18 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <string>
 
 #include "util.hpp"
 #include "dlx.hpp"
 
+using std::vector;
+
 class Node {
   public:
-    Node(): Node(-1, -1) {}
-    Node(int type, int id): Node(type, id, this) {}
-    Node(int type, int id, Node *head): type(type), id(id), head(head),
+    Node(): Node("-1") {}
+    Node(const std::string& name): Node(name, this) {}
+    Node(const std::string& name, Node *head): name(name), head(head),
       left(this), right(this), down(this), up(this) {}
 
     void insert_down(Node* x) {
@@ -37,13 +40,7 @@ class Node {
     }
 
     size_t size;
-    // 0 - master node
-    // 1 - column node
-    // 2 - row node
-    // 3 - cell node
-    // Could recognize cell by what does it point to?
-    int type;
-    int id;
+    std::string name;
     Node *head;
     Node *left, *right, *down, *up;
 };
@@ -58,10 +55,10 @@ Node* find_smallest_column(Node *master) {
   return smallest;
 }
 
-std::vector<Node*> sol;
+vector<Node*> sol;
 void print_solution() {
   for (Node* i: sol) {
-    std::cout << i->head->id << " ";
+    std::cout << i->head->name << " ";
   }
   std::cout << std::endl;
 }
@@ -91,24 +88,19 @@ void uncover(Node* col) {
   col->left->right = col;
 }
 
-void print_state(Node* master) {
-  for (Node* i = master->down; i != master; i = i->down) {
-    printf("ROW %d:", i->id);
-    for (Node* j = i->right; j != i; j = j->right) {
-      printf("%d ", j->head->id);
-    }
-    printf("\n");
-  }
-}
-
-void search(Node *master, std::function<void(const std::vector<int>&)> notify) {
+void search(Node *master, std::function<void(const vector<vector<std::string>>&)> notify) {
   if (master->right == master) {
-    std::vector<int> names;
+    vector<vector<std::string>> names;
     std::transform(sol.begin(), sol.end(), std::back_inserter(names), 
-        [master](Node* x) -> int {
-        while (x->head != master) x = x->right;
-        return x->id;
-        });
+        [master, &names](Node* x) -> vector<std::string> {
+      vector<std::string> row_columns;
+      row_columns.push_back(x->head->name);
+      for (Node* i = x->right; i != x; i = i->right) {
+        row_columns.push_back(i->head->name);
+      }
+      sort(row_columns.begin(), row_columns.end());
+      return row_columns;
+    });
     std::sort(names.begin(), names.end());
     notify(names);
     return;
@@ -124,7 +116,6 @@ void search(Node *master, std::function<void(const std::vector<int>&)> notify) {
 
     // remove all columns with 1s in the selected row
     for (Node *cell = row->right; cell != row; cell = cell->right) {
-      if (cell->head == master) continue;
       cover(cell->head);
     }
     search(master, notify);
@@ -133,7 +124,6 @@ void search(Node *master, std::function<void(const std::vector<int>&)> notify) {
 
     // unselect current row - insert all column with 1s in the selected row
     for (Node *cell = row->left; cell != row; cell = cell->left) {
-      if (cell->head == master) continue;
       uncover(cell->head);
     }
   }
@@ -142,44 +132,37 @@ void search(Node *master, std::function<void(const std::vector<int>&)> notify) {
 //  column_to_cover->uncover();
 }
 
-std::vector<std::vector<int>> solve(const std::vector<std::string>& matrix) {
-  Node* master = new Node(0, -1);
+vector<vector<vector<std::string>>> solve(const vector<std::string>& matrix) {
+  Node* master = new Node("-1");
 
   Node* curr_column = master;
   // TODO: matrix empty
   // TODO: strings have to be equal lenghts
-  size_t num_rows = matrix.size();
-  for (size_t i = 0; i < num_rows; ++i) {
-    master->insert_up(new Node(2, i, master));
-  }
-  
   size_t num_columns = matrix[0].size();
   for (size_t i = 0; i < num_columns; ++i) {
-    curr_column->insert_right(new Node(1, i));
-    curr_column = curr_column->right;
+    master->insert_left(new Node(std::to_string(i)));
   }
 
-  Node* row_header = master;
   for (std::string i: matrix) {
     curr_column = master;
-    Node* last_in_row = row_header = row_header->down;
+    Node* first_in_row = NULL;
     
     for (char c: i) {
       curr_column = curr_column->right;
       if (c == '0') continue;
       
-      Node* new_cell = new Node(3, 1, curr_column);
-      last_in_row->insert_right(new_cell);
-      last_in_row = new_cell;
+      Node* new_cell = new Node("0", curr_column);
+      if (first_in_row == NULL) first_in_row = new_cell;
+      else first_in_row->insert_left(new_cell);
+      
       curr_column->insert_up(new_cell);
       curr_column->size++;
     }
   }
 
-  std::vector<std::vector<int>> sols;
-  search(master, [&sols](const std::vector<int>& sol) mutable {
+  vector<vector<vector<std::string>>> sols;
+  search(master, [&sols](const vector<vector<std::string>>& sol) mutable {
       sols.push_back(sol);
       });
-
   return sols;
 }

@@ -12,14 +12,19 @@ struct Node;
  * solution is found, function notify is called with list of rows ids(names)
  * that form a single solution
  **/
-void search(Node *master, std::function<void(const std::vector<int>&)> notify);
+void search(Node *master, std::function<void(
+      const std::vector<std::vector<std::string>>&)> notify
+    );
 
 /**
  * Simple, but inefficent way of finding solutions to exact cover problem given
  * as dense matrix of zeros and ones.
  * Used for testing.
  **/
-std::vector<std::vector<int>> brute(const std::vector<std::string>& matrix);
+std::vector<std::vector<int>> brute(
+    const std::vector<int>& matrix
+    );
 
-std::vector<std::vector<int>> solve(const std::vector<std::string>& matrix);
+std::vector<std::vector<std::vector<std::string>>> solve(
+    const std::vector<std::string>& matrix);
 #endif
