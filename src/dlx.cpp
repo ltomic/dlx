@@ -104,10 +104,11 @@ void print_state(Node* master) {
 void search(Node *master, std::function<void(const std::vector<int>&)> notify) {
   if (master->right == master) {
     std::vector<int> names;
-    for (auto i: sol) {
-      while (i->head != master) i = i->right;
-      names.push_back(i->id);
-    }
+    std::transform(sol.begin(), sol.end(), std::back_inserter(names), 
+        [master](Node* x) -> int {
+        while (x->head != master) x = x->right;
+        return x->id;
+        });
     std::sort(names.begin(), names.end());
     notify(names);
     return;
